@@ -4,13 +4,14 @@
 #define PASS "fb5cd86358"
 
 const char* host = "192.168.1.71";
+const int pin = D1;
 
 WiFiClient client;
 
 void setup() {
   Serial.begin(115200);
   Serial.println();
-
+pinMode(pin, OUTPUT);
   /* Set Client up as station */
   WiFi.mode(WIFI_STA);
 
@@ -43,6 +44,7 @@ void loop() {
     Serial.print("POV message: ");
     Serial.println(data);
   }
-
+  digitalWrite(pin, !digitalRead(pin));
+delay(500);
 
 }
