@@ -2,23 +2,28 @@
 #include <ESP8266WiFi.h>
 #include <ShiftRegister74HC595.h>
 #include <arduino-timer.h>
+#include <ArduinoWebsockets.h>
 
-#define NAME "******"
-#define PASS "******"
+#define NAME "MEO-739510"
+#define PASS "fb5cd86358"
+using namespace websockets;
 
 ShiftRegister74HC595<1> sr (D0, D1, D2);
-WiFiClient client;
+
+WebsocketsClient client;
+
 auto timer = timer_create_default();
 
 const int VIEW_SIZE = 16;
 const int BUFFER_LENGTH = VIEW_SIZE * 8;
-const char* host = "******";
+const char* host = "192.168.1.71";
 
 float roundTripTime = .01; //// Time (Hz) for 1 cycle. 1 complete buffer push
 
 LedWord ledWord;
 boolean toggle = true;
 byte values;
+String toDisplay;
 
 bool toggle_leds(void *) {
 
@@ -30,21 +35,13 @@ bool toggle_leds(void *) {
   return true;
 }
 
-bool checkHost(void *) {
-  if(client.available()){
-    return true;  
-  }
-  if (client.connect(host, 9090)) {
-    Serial.print("Connected to: ");
-    Serial.println(host);
-  }
+bool checkMessage(void *) {
+  client.send("message");
   return true;
 }
 
 void setup()
 {
-
-  Serial.begin(115200);
 
   // "clock" led so we can see each pulse of the time step
   pinMode (LED_BUILTIN, OUTPUT);
@@ -69,31 +66,41 @@ void setup()
   Serial.print("Connected, IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (client.connect(host, 9090)) {
+  if (client.connect(host, 8080, "/povdisplay/message")) {
     Serial.print("Connected to: ");
     Serial.println(host);
   }
+
+  client.onMessage([&](WebsocketsMessage message) {
+
+    if (message.data() == toDisplay){
+      
+    } else{
+    String c = message.data();
+    toDisplay = c;
+    char bufferA[c.length()];
+    c.toCharArray(bufferA, c.length());
+    ledWord.setWord(bufferA);
+    }
+  });
 
   String c = "Insert Word";
   char bufferA[c.length()];
   c.toCharArray(bufferA, c.length());
   ledWord.setWord(bufferA);
 
- // timer.every(10000, checkHost);
-  timer.every(5, toggle_leds);
+  // timer.every(10000, checkHost);
+  timer.every(500, toggle_leds);
+  timer.every(10000, checkMessage);
 
 }
 
 void loop()
 {
-timer.tick();
+  timer.tick();
 
- if (client.available()) {
-
-    String c = client.readString();
-    char bufferA[c.length()];
-    c.toCharArray(bufferA, c.length());
-    ledWord.setWord(bufferA);
+  if (client.available()) {
+    client.poll();
   }
 
 }
