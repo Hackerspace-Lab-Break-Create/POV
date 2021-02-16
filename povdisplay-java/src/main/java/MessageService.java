@@ -1,11 +1,12 @@
+import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class MessageService {
 
-    private Map<String, Integer[]> lettersMap = new HashMap<>();
-
-    private String message = "TOFUU";
+    private String message = "TOFU";
 
      public String getWord() {
 

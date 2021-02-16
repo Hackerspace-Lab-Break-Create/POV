@@ -3,9 +3,10 @@
 #include <ShiftRegister74HC595.h>
 #include <arduino-timer.h>
 #include <ArduinoWebsockets.h>
+#include <ArduinoOTA.h>
 
-#define NAME "MEO-739510"
-#define PASS "fb5cd86358"
+#define NAME "*******"
+#define PASS "*******"
 using namespace websockets;
 
 ShiftRegister74HC595<1> sr (D0, D1, D2);
@@ -14,11 +15,7 @@ WebsocketsClient client;
 
 auto timer = timer_create_default();
 
-const int VIEW_SIZE = 16;
-const int BUFFER_LENGTH = VIEW_SIZE * 8;
-const char* host = "192.168.1.71";
-
-float roundTripTime = .01; //// Time (Hz) for 1 cycle. 1 complete buffer push
+const char* host = "*******";
 
 LedWord ledWord;
 boolean toggle = true;
@@ -71,6 +68,29 @@ void setup()
     Serial.println(host);
   }
 
+  ArduinoOTA.setHostname("******");
+  ArduinoOTA.setPassword("******");
+
+   ArduinoOTA.onStart([]() {
+    Serial.println("Start");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
+  Serial.println("OTA ready");
+
   client.onMessage([&](WebsocketsMessage message) {
 
     if (message.data() == toDisplay){
@@ -84,19 +104,15 @@ void setup()
     }
   });
 
-  String c = "Insert Word";
-  char bufferA[c.length()];
-  c.toCharArray(bufferA, c.length());
-  ledWord.setWord(bufferA);
-
-  // timer.every(10000, checkHost);
-  timer.every(500, toggle_leds);
+ 
+  timer.every(50, toggle_leds);
   timer.every(10000, checkMessage);
 
 }
 
 void loop()
 {
+  ArduinoOTA.handle();
   timer.tick();
 
   if (client.available()) {
