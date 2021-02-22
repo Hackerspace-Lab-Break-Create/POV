@@ -22,11 +22,8 @@ public class WebSocketServer {
     public void onOpen(Session session){
         System.out.println(session.getId() + " has opened a connection");
         try {
-            session.getBasicRemote().sendText("Connection Established");
-            words = new HashMap<>();
-            words.put(1,"TOFU");
-            words.put(2,"KEVIN");
-            words.put(3,"HACKERSPACE");
+            session.getBasicRemote().sendText("HACKERSPACE" + "\n");
+
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -37,11 +34,9 @@ public class WebSocketServer {
         System.out.println("Message from " + session.getId() + ": " + message);
         //TODO implement code of updating word
         try {
-            if(counter > words.size()){
-                counter = 1;
-            }
-            session.getBasicRemote().sendText(words.get(counter) +"\n");
-            counter++;
+
+            session.getBasicRemote().sendText("HACKERSPACE" +"\n");
+
         } catch (IOException ex) {
             ex.printStackTrace();
         }

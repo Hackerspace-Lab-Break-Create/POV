@@ -4,32 +4,71 @@
 #include <arduino-timer.h>
 #include <ArduinoWebsockets.h>
 #include <ArduinoOTA.h>
+#include "ColDisplay.h"
 
-#define NAME "*******"
-#define PASS "*******"
+#define NAME "MEO-739510"
+#define PASS "fb5cd86358"
 using namespace websockets;
 
-ShiftRegister74HC595<1> sr (D0, D1, D2);
+ShiftRegister74HC595<1> sr (D0, D2 , D3);
+ShiftRegister74HC595<1> sr2 (D1, D5 , D6);
 
 WebsocketsClient client;
 
 auto timer = timer_create_default();
 
-const char* host = "*******";
+const char* host = "192.168.1.71";
 
 LedWord ledWord;
+ColDisplay colDisplay;
 boolean toggle = true;
 byte values;
 String toDisplay;
+int counter = 0;
+byte letter[8][2];
+byte* letterfirst;
+byte* lettersecond;
+
 
 bool toggle_leds(void *) {
 
   values = ledWord.nextCol();
   for (int i = 0; i < 8; i++) {
-    sr.set(7 - i, bitRead(values, i) == 0 ? LOW : HIGH);
+    sr.set(i, bitRead(values, i) == 0 ? LOW : HIGH);
   }
 
+
   return true;
+}
+
+bool letterWord(void *) {
+
+  letterfirst = ledWord.letters[counter];
+  lettersecond = ledWord.letters[counter + 1];
+
+  for (int j = 0; j < 8; j++) {
+
+    letter[j][0] = letterfirst[j];
+
+    letter[j][1] = lettersecond[j];
+  }
+
+
+
+  for (int i = 0; i < 10; i++) {
+    colDisplay.fillBuffer(0b00000000);
+    colDisplay.setBytes (i, i, (byte*)letter, 8, 2);
+    colDisplay.printDisplay ();
+  }
+
+
+  counter++;
+
+  if (counter >= toDisplay.length() - 2) {
+    counter = 0;
+    colDisplay.setPixel (0, 0, true);
+    colDisplay.printDisplay();
+  }
 }
 
 bool checkMessage(void *) {
@@ -68,10 +107,10 @@ void setup()
     Serial.println(host);
   }
 
-  ArduinoOTA.setHostname("******");
-  ArduinoOTA.setPassword("******");
+  ArduinoOTA.setHostname("espTofu");
+  ArduinoOTA.setPassword("kali");
 
-   ArduinoOTA.onStart([]() {
+  ArduinoOTA.onStart([]() {
     Serial.println("Start");
   });
   ArduinoOTA.onEnd([]() {
@@ -93,25 +132,30 @@ void setup()
 
   client.onMessage([&](WebsocketsMessage message) {
 
-    if (message.data() == toDisplay){
-      
-    } else{
-    String c = message.data();
-    toDisplay = c;
-    char bufferA[c.length()];
-    c.toCharArray(bufferA, c.length());
-    ledWord.setWord(bufferA);
+    if (message.data() == toDisplay) {
+
+    } else {
+      String c = message.data();
+      toDisplay = c;
+      char bufferA[c.length()];
+      c.toCharArray(bufferA, c.length());
+      ledWord.setWord(bufferA);
     }
   });
 
- 
-  timer.every(50, toggle_leds);
+
+  for (int i = 0; i < 8; i++) {
+    sr2.set(i, LOW);
+  }
+  timer.every(500, letterWord);
+ // timer.every(50, toggle_leds);
   timer.every(10000, checkMessage);
 
 }
 
 void loop()
 {
+
   ArduinoOTA.handle();
   timer.tick();
 
