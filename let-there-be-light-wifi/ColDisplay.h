@@ -7,13 +7,13 @@ const static int MAX_WIDTH = 4;  //BYTES
 const static int MAX_HEIGHT = 8; //LEDS
 
 class ColDisplay {
-  private:
+  public:
 
     byte displayBuffer[MAX_HEIGHT][MAX_WIDTH];
     int pixelHeight = MAX_HEIGHT; //Number of leds verticaly
     int viewWidthNumBytes = MAX_WIDTH; //Number of bytes in view
 
-  public:
+ 
     byte values;
 
     ColDisplay () {
