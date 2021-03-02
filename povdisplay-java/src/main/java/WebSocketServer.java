@@ -22,7 +22,7 @@ public class WebSocketServer {
     public void onOpen(Session session){
         System.out.println(session.getId() + " has opened a connection");
         try {
-            session.getBasicRemote().sendText("Wait" + "\n");
+            session.getBasicRemote().sendText("ola" + "\n");
 
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -35,7 +35,7 @@ public class WebSocketServer {
         //TODO implement code of updating word
         try {
 
-            session.getBasicRemote().sendText("lucas" +"\n");
+            session.getBasicRemote().sendText("leo" +"\n");
 
         } catch (IOException ex) {
             ex.printStackTrace();

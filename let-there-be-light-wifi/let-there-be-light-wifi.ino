@@ -6,6 +6,7 @@
 #include <ArduinoOTA.h>
 #include "ColDisplay.h"
 
+
 #define NAME "MEO-739510"
 #define PASS "fb5cd86358"
 using namespace websockets;
@@ -41,7 +42,7 @@ void toggle_leds() {
     for (int i = 0; i < 8; i++) {
       sr.set(i, bitRead(values, i) == 0 ? LOW : HIGH);
     }
-    delay(2);
+    delay(3);
   }
 
 }
@@ -109,8 +110,8 @@ void setup()
   pinMode(pingPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
-  Serial.begin(115200);
-  Serial.println();
+  Serial.begin(9600);
+
 
   /* Set Client up as station */
   WiFi.mode(WIFI_STA);
@@ -118,44 +119,43 @@ void setup()
   WiFi.begin(NAME, PASS);
 
   /* Connect to the network */
-  Serial.print("Connecting");
+  //Serial.write("Connecting");
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
-    Serial.print(".");
+   // Serial.print(".");
   }
-  Serial.println();
 
-  Serial.print("Connected, IP address: ");
-  Serial.println(WiFi.localIP());
+  //Serial.write("Connected, IP address: ");
+ // Serial.println(WiFi.localIP());
 
   if (client.connect(host, 8080, "/povdisplay/message")) {
-    Serial.print("Connected to: ");
-    Serial.println(host);
+ //   Serial.write("Connected to: ");
+   // Serial.write(host);
   }
 
   ArduinoOTA.setHostname("espTofu");
   ArduinoOTA.setPassword("kali");
 
   ArduinoOTA.onStart([]() {
-    Serial.println("Start");
+  //  Serial.write("Start");
   });
   ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
+   // Serial.write("\nEnd");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  //  Serial.write("Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+   // Serial.write("Error[%u]: ", error);
+//    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+//    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+//    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+//    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+//    else if (error == OTA_END_ERROR) Serial.println("End Failed");
   });
   ArduinoOTA.begin();
-  Serial.println("OTA ready");
+  //Serial.write("OTA ready");
 
   client.onMessage([&](WebsocketsMessage message) {
 
@@ -163,10 +163,12 @@ void setup()
 
     } else {
       String c = message.data();
+     
       toDisplay = c;
       char bufferA[c.length()];
       c.toCharArray(bufferA, c.length());
       ledWord.setWord(bufferA);
+       Serial.write(bufferA);
     }
   });
 
@@ -191,13 +193,13 @@ void loop()
   digitalWrite(pingPin, LOW);
 
   int duration = pulseIn(echoPin, HIGH);
-  if (duration < 500 && turn) {
-
-    letterWord();
+  if (duration < 200 && turn) {
+    delay(5);
+    toggle_leds();
     turn = false;
   }
 
-  if ( duration > 1000) {
+  if ( duration > 2000) {
     turn = true;
   }
   if (client.available()) {
